@@ -2,7 +2,7 @@
   "name": "numbertokorean-ts",
   "version": "0.1.0",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && esbuild ./dist/numbertokorean.js --format=esm --minify --platform=browser --target=chrome58,firefox57,safari11,edge16 --outfile=./dist/numbertokorean.min.js",
+    "build": "tsc --project tsconfig.build.json && esbuild ./dist/numbertokorean.js --bundle --format=esm --minify --platform=browser --target=chrome58,firefox57,safari11,edge16 --outfile=./dist/numbertokorean.min.js",
     "build:watch": "tsc -w",
     "coverage": "npm run test -- --coverage",
     "test": "jest",

@@ -1,9 +1,9 @@
 export abstract class NumberToKorean {
-  private static minus = '마이너스';
-  private static zero = '영';
-  private static unitsBig = ['', '만', '억', '조', '경']; // in reverse order
-  private static unitsSmall = ['천', '백', '십'];
-  private static numbersImplicit = [
+  private static readonly minus = '마이너스';
+  private static readonly zero = '영';
+  private static readonly unitsBig = ['', '만', '억', '조', '경']; // in reverse order
+  private static readonly unitsSmall = ['천', '백', '십'];
+  private static readonly numbersImplicit = [
     '',
     '',
     '이',
@@ -15,7 +15,7 @@ export abstract class NumberToKorean {
     '팔',
     '구',
   ];
-  private static numbersExplicit = [
+  private static readonly numbersExplicit = [
     '',
     '일',
     '이',
@@ -27,12 +27,9 @@ export abstract class NumberToKorean {
     '팔',
     '구',
   ];
+  private static readonly ascii0 = '0'.charCodeAt(0);
 
   private static trimLeft(s: string, cut: string): string {
-    if (cut.length > s.length) {
-      return s;
-    }
-
     while (s.startsWith(cut)) {
       s = s.substring(cut.length);
     }
@@ -131,31 +128,31 @@ export abstract class NumberToKorean {
     return ret;
   }
 
-  private static ascii(c: string): number {
-    return c.charCodeAt(0);
-  }
-
   private static splitNumberByDigits(s: string): number[] {
-    const ascii0 = this.ascii('0');
     switch (s.length) {
       case 4:
         return [
-          this.ascii(s[0]) - ascii0,
-          this.ascii(s[1]) - ascii0,
-          this.ascii(s[2]) - ascii0,
-          this.ascii(s[3]) - ascii0,
+          s.charCodeAt(0) - this.ascii0,
+          s.charCodeAt(1) - this.ascii0,
+          s.charCodeAt(2) - this.ascii0,
+          s.charCodeAt(3) - this.ascii0,
         ];
       case 3:
         return [
           0,
-          this.ascii(s[0]) - ascii0,
-          this.ascii(s[1]) - ascii0,
-          this.ascii(s[2]) - ascii0,
+          s.charCodeAt(0) - this.ascii0,
+          s.charCodeAt(1) - this.ascii0,
+          s.charCodeAt(2) - this.ascii0,
         ];
       case 2:
-        return [0, 0, this.ascii(s[0]) - ascii0, this.ascii(s[1]) - ascii0];
+        return [
+          0,
+          0,
+          s.charCodeAt(0) - this.ascii0,
+          s.charCodeAt(1) - this.ascii0,
+        ];
       case 1:
-        return [0, 0, 0, this.ascii(s[0]) - ascii0];
+        return [0, 0, 0, s.charCodeAt(0) - this.ascii0];
       default:
         return [0, 0, 0, 0];
     }

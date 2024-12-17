@@ -309,6 +309,12 @@ test('NumberToKorean.toKoreanLanguage()', () => {
       ],
     },
     {
+      value: BigInt('0'),
+      isMonetary: false,
+      removeEmptyString: false,
+      expected: ['영'],
+    },
+    {
       value: BigInt('9223372036854775807') - BigInt(1),
       isMonetary: false,
       removeEmptyString: false,

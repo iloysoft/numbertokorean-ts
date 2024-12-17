@@ -1,8 +1,5 @@
 export class NumberToKorean {
     static trimLeft(s, cut) {
-        if (cut.length > s.length) {
-            return s;
-        }
         while (s.startsWith(cut)) {
             s = s.substring(cut.length);
         }
@@ -80,30 +77,31 @@ export class NumberToKorean {
         ret.reverse();
         return ret;
     }
-    static ascii(c) {
-        return c.charCodeAt(0);
-    }
     static splitNumberByDigits(s) {
-        const ascii0 = this.ascii('0');
         switch (s.length) {
             case 4:
                 return [
-                    this.ascii(s[0]) - ascii0,
-                    this.ascii(s[1]) - ascii0,
-                    this.ascii(s[2]) - ascii0,
-                    this.ascii(s[3]) - ascii0,
+                    s.charCodeAt(0) - this.ascii0,
+                    s.charCodeAt(1) - this.ascii0,
+                    s.charCodeAt(2) - this.ascii0,
+                    s.charCodeAt(3) - this.ascii0,
                 ];
             case 3:
                 return [
                     0,
-                    this.ascii(s[0]) - ascii0,
-                    this.ascii(s[1]) - ascii0,
-                    this.ascii(s[2]) - ascii0,
+                    s.charCodeAt(0) - this.ascii0,
+                    s.charCodeAt(1) - this.ascii0,
+                    s.charCodeAt(2) - this.ascii0,
                 ];
             case 2:
-                return [0, 0, this.ascii(s[0]) - ascii0, this.ascii(s[1]) - ascii0];
+                return [
+                    0,
+                    0,
+                    s.charCodeAt(0) - this.ascii0,
+                    s.charCodeAt(1) - this.ascii0,
+                ];
             case 1:
-                return [0, 0, 0, this.ascii(s[0]) - ascii0];
+                return [0, 0, 0, s.charCodeAt(0) - this.ascii0];
             default:
                 return [0, 0, 0, 0];
         }
@@ -200,4 +198,5 @@ NumberToKorean.numbersExplicit = [
     '팔',
     '구',
 ];
+NumberToKorean.ascii0 = '0'.charCodeAt(0);
 //# sourceMappingURL=numbertokorean.js.map
