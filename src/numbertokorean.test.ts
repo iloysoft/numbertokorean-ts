@@ -438,6 +438,30 @@ test('NumberToKorean.toKoreanLanguage()', () => {
       removeEmptyString: true,
       expected: ['일만', '일'],
     },
+    {
+      value: 11111,
+      isMonetary: false,
+      removeEmptyString: false,
+      expected: ['만', '천백십일'],
+    },
+    {
+      value: 11111,
+      isMonetary: false,
+      removeEmptyString: true,
+      expected: ['만', '천백십일'],
+    },
+    {
+      value: 11111,
+      isMonetary: true,
+      removeEmptyString: false,
+      expected: ['일만', '일천일백일십일'],
+    },
+    {
+      value: 11111,
+      isMonetary: true,
+      removeEmptyString: true,
+      expected: ['일만', '일천일백일십일'],
+    },
 
     {
       value: 113560,
