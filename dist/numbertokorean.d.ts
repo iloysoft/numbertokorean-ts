@@ -9,6 +9,8 @@ export declare abstract class NumberToKorean {
     private static readonly zero;
     private static readonly unitsBig;
     private static readonly unitsSmall;
+    private static readonly minInt64;
+    private static readonly maxInt64;
     private static readonly numbersImplicit;
     private static readonly numbersExplicit;
     private static readonly ascii0;

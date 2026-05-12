@@ -16,6 +16,8 @@ export abstract class NumberToKorean {
   private static readonly zero = '영';
   private static readonly unitsBig = ['', '만', '억', '조', '경']; // in reverse order
   private static readonly unitsSmall = ['천', '백', '십'];
+  private static readonly minInt64 = BigInt('-9223372036854775808');
+  private static readonly maxInt64 = BigInt('9223372036854775807');
   private static readonly numbersImplicit = [
     '',
     '',
@@ -44,7 +46,7 @@ export abstract class NumberToKorean {
 
   private static trimLeadingZeros(s: string): string {
     let pos = 0;
-    while (pos < s.length && s.charCodeAt(pos) === this.ascii0) {
+    while (pos < s.length && s.charCodeAt(pos) === NumberToKorean.ascii0) {
       pos += 1;
     }
 
@@ -52,9 +54,7 @@ export abstract class NumberToKorean {
   }
 
   private static isBigIntInInt64Range(n: bigint): boolean {
-    return (
-      n >= BigInt('-9223372036854775808') && n <= BigInt('9223372036854775807')
-    );
+    return n >= NumberToKorean.minInt64 && n <= NumberToKorean.maxInt64;
   }
 
   private static parseNumber(n: number | bigint): ParsedNumber | undefined {
@@ -66,7 +66,7 @@ export abstract class NumberToKorean {
         return {negative: false, chunks: ['0']};
       }
     } else {
-      if (!this.isBigIntInInt64Range(n)) {
+      if (!NumberToKorean.isBigIntInInt64Range(n)) {
         // out of int64 range
         return undefined;
       }
@@ -91,7 +91,7 @@ export abstract class NumberToKorean {
         i = 0;
       }
 
-      chunks.push(this.trimLeadingZeros(s.substring(i, prevPos)));
+      chunks.push(NumberToKorean.trimLeadingZeros(s.substring(i, prevPos)));
 
       if (i === 0) {
         break;
@@ -142,16 +142,18 @@ export abstract class NumberToKorean {
       return [];
     }
 
-    const parsed = this.parseNumber(n);
+    const parsed = NumberToKorean.parseNumber(n);
     if (parsed === undefined) {
       return [];
     }
 
-    return this.formatParsedNumber(
+    const opts = options ?? {};
+
+    return NumberToKorean.formatParsedNumber(
       parsed,
-      options.removeEmptyString ?? true,
+      opts.removeEmptyString ?? true,
       '-',
-      (chunk, unitIndex) => chunk + this.unitsBig[unitIndex],
+      (chunk, unitIndex) => chunk + NumberToKorean.unitsBig[unitIndex],
     );
   }
 
@@ -161,15 +163,15 @@ export abstract class NumberToKorean {
       return 0;
     }
 
-    return s.charCodeAt(sourcePos) - this.ascii0;
+    return s.charCodeAt(sourcePos) - NumberToKorean.ascii0;
   }
 
   private static readPositionalDigit(n: number, isMonetary: boolean): string {
     if (isMonetary) {
-      return this.numbersExplicit[n];
+      return NumberToKorean.numbersExplicit[n];
     }
 
-    return this.numbersImplicit[n];
+    return NumberToKorean.numbersImplicit[n];
   }
 
   private static readNumber(
@@ -177,35 +179,35 @@ export abstract class NumberToKorean {
     isManUnitChunk: boolean,
     isMonetary: boolean,
   ): string {
-    const thousands = this.digitAt(s, 0);
-    const hundreds = this.digitAt(s, 1);
-    const tens = this.digitAt(s, 2);
-    const ones = this.digitAt(s, 3);
+    const thousands = NumberToKorean.digitAt(s, 0);
+    const hundreds = NumberToKorean.digitAt(s, 1);
+    const tens = NumberToKorean.digitAt(s, 2);
+    const ones = NumberToKorean.digitAt(s, 3);
 
     let ret = '';
 
     if (thousands > 0) {
-      ret += this.readPositionalDigit(thousands, isMonetary);
-      ret += this.unitsSmall[0];
+      ret += NumberToKorean.readPositionalDigit(thousands, isMonetary);
+      ret += NumberToKorean.unitsSmall[0];
     }
     if (hundreds > 0) {
-      ret += this.readPositionalDigit(hundreds, isMonetary);
-      ret += this.unitsSmall[1];
+      ret += NumberToKorean.readPositionalDigit(hundreds, isMonetary);
+      ret += NumberToKorean.unitsSmall[1];
     }
     if (tens > 0) {
-      ret += this.readPositionalDigit(tens, isMonetary);
-      ret += this.unitsSmall[2];
+      ret += NumberToKorean.readPositionalDigit(tens, isMonetary);
+      ret += NumberToKorean.unitsSmall[2];
     }
 
     if (ones > 0) {
       if (isMonetary) {
-        ret += this.numbersExplicit[ones];
+        ret += NumberToKorean.numbersExplicit[ones];
       } else {
         if (isManUnitChunk && thousands === 0 && hundreds === 0 && tens === 0) {
           // In non-monetary readings, 10001 is read as "만 일", not "일만 일".
-          ret += this.numbersImplicit[ones];
+          ret += NumberToKorean.numbersImplicit[ones];
         } else {
-          ret += this.numbersExplicit[ones];
+          ret += NumberToKorean.numbersExplicit[ones];
         }
       }
     }
@@ -221,23 +223,28 @@ export abstract class NumberToKorean {
       return [];
     }
 
-    const parsed = this.parseNumber(n);
+    const parsed = NumberToKorean.parseNumber(n);
 
     if (parsed === undefined) {
       return [];
     }
 
     if (parsed.chunks.length === 1 && parsed.chunks[0] === '0') {
-      return [this.zero];
+      return [NumberToKorean.zero];
     }
 
-    return this.formatParsedNumber(
+    const opts = options ?? {};
+
+    return NumberToKorean.formatParsedNumber(
       parsed,
-      options.removeEmptyString ?? true,
-      this.minus,
+      opts.removeEmptyString ?? true,
+      NumberToKorean.minus,
       (chunk, unitIndex) =>
-        this.readNumber(chunk, unitIndex === 1, options.monetary ?? false) +
-        this.unitsBig[unitIndex],
+        NumberToKorean.readNumber(
+          chunk,
+          unitIndex === 1,
+          opts.monetary ?? false,
+        ) + NumberToKorean.unitsBig[unitIndex],
     );
   }
 }

@@ -1,4 +1,8 @@
-import {NumberToKorean} from './numbertokorean';
+import {
+  NumberToKorean,
+  type ToKoreanLanguageOptions,
+  type ToKoreanUnitsOptions,
+} from './numbertokorean';
 
 describe('NumberToKorean.toKoreanUnits()', () => {
   type inout = {
@@ -189,6 +193,21 @@ describe('NumberToKorean.toKoreanUnits()', () => {
 
   test('removes empty groups by default', () => {
     expect(NumberToKorean.toKoreanUnits(100000001)).toStrictEqual(['1억', '1']);
+  });
+
+  test('uses default options when options is null at runtime', () => {
+    expect(
+      NumberToKorean.toKoreanUnits(
+        100000001,
+        null as unknown as ToKoreanUnitsOptions,
+      ),
+    ).toStrictEqual(['1억', '1']);
+  });
+
+  test('supports unbound static calls', () => {
+    const toKoreanUnits = NumberToKorean.toKoreanUnits;
+
+    expect(toKoreanUnits(10001)).toStrictEqual(['1만', '1']);
   });
 });
 
@@ -590,6 +609,21 @@ describe('NumberToKorean.toKoreanLanguage()', () => {
       '십일조',
       '만',
     ]);
+  });
+
+  test('uses default options when options is null at runtime', () => {
+    expect(
+      NumberToKorean.toKoreanLanguage(
+        11000000010000,
+        null as unknown as ToKoreanLanguageOptions,
+      ),
+    ).toStrictEqual(['십일조', '만']);
+  });
+
+  test('supports unbound static calls', () => {
+    const toKoreanLanguage = NumberToKorean.toKoreanLanguage;
+
+    expect(toKoreanLanguage(10001)).toStrictEqual(['만', '일']);
   });
 });
 
