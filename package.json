@@ -1,30 +1,67 @@
 {
   "name": "numbertokorean-ts",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Library to convert number and bigint into string[] in the Sino-Korean system",
+  "keywords": [
+    "korean",
+    "number",
+    "bigint",
+    "sino-korean",
+    "typescript"
+  ],
+  "homepage": "https://github.com/iloysoft/numbertokorean-ts#readme",
+  "bugs": {
+    "url": "https://github.com/iloysoft/numbertokorean-ts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iloysoft/numbertokorean-ts.git"
+  },
+  "type": "module",
+  "main": "./dist/numbertokorean.cjs",
+  "module": "./dist/numbertokorean.js",
+  "types": "./dist/numbertokorean.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/numbertokorean.d.ts",
+      "import": "./dist/numbertokorean.js",
+      "require": "./dist/numbertokorean.cjs",
+      "default": "./dist/numbertokorean.js"
+    },
+    "./numbertokorean.min.js": "./dist/numbertokorean.min.js"
+  },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && esbuild ./dist/numbertokorean.js --bundle --format=esm --minify --platform=browser --target=chrome58,firefox57,safari11,edge16 --outfile=./dist/numbertokorean.min.js",
-    "build:watch": "tsc -w",
-    "coverage": "npm run test -- --coverage",
-    "test": "jest",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:browser",
+    "build:esm": "tsc --project tsconfig.build.json",
+    "build:cjs": "esbuild ./dist/numbertokorean.js --bundle --format=cjs --platform=node --target=node22 --outfile=./dist/numbertokorean.cjs",
+    "build:browser": "esbuild ./dist/numbertokorean.js --bundle --format=esm --minify --platform=browser --target=es2020 --outfile=./dist/numbertokorean.min.js",
+    "build:watch": "tsc --project tsconfig.build.json --watch",
+    "coverage": "npm run compile && jest --coverage && npm run smoke:entrypoints && npm run lint",
+    "test": "jest && npm run smoke:entrypoints",
+    "smoke:entrypoints": "node ./scripts/entrypoint-smoke.mjs",
     "lint": "gts lint ./src/",
-    "clean": "gts clean",
+    "check:generated": "npm run build && test -z \"$(git status --porcelain -- dist)\"",
+    "clean": "node ./scripts/clean.mjs",
     "compile": "npm run build",
     "fix": "gts fix ./src/",
-    "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint"
   },
   "author": "iloysoft LC.",
-  "license": "dual license",
-  "description": "",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
-    "esbuild": "^0.27.0",
-    "gts": "^6.0.2",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.12.4",
+    "esbuild": "^0.28.0",
+    "gts": "^7.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.9",
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "tmp": "0.2.5"
@@ -32,5 +69,5 @@
   "engines": {
     "node": ">=22.12.0"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "npm@11.13.0"
 }

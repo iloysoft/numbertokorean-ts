@@ -1,3 +1,16 @@
+type ParsedNumber = {
+  negative: boolean;
+  chunks: string[];
+};
+
+export type ToKoreanUnitsOptions = {
+  removeEmptyString?: boolean;
+};
+
+export type ToKoreanLanguageOptions = ToKoreanUnitsOptions & {
+  monetary?: boolean;
+};
+
 export abstract class NumberToKorean {
   private static readonly minus = '마이너스';
   private static readonly zero = '영';
@@ -29,42 +42,46 @@ export abstract class NumberToKorean {
   ];
   private static readonly ascii0 = '0'.charCodeAt(0);
 
-  private static trimLeft(s: string, cut: string): string {
-    while (s.startsWith(cut)) {
-      s = s.substring(cut.length);
+  private static trimLeadingZeros(s: string): string {
+    let pos = 0;
+    while (pos < s.length && s.charCodeAt(pos) === this.ascii0) {
+      pos += 1;
     }
 
-    return s;
+    return s.substring(pos);
   }
 
-  private static parseNumber(n: number | bigint): string[] {
+  private static isBigIntInInt64Range(n: bigint): boolean {
+    return (
+      n >= BigInt('-9223372036854775808') && n <= BigInt('9223372036854775807')
+    );
+  }
+
+  private static parseNumber(n: number | bigint): ParsedNumber | undefined {
     if (typeof n === 'number') {
       if (!Number.isSafeInteger(n)) {
-        return [];
+        return undefined;
       }
       if (n === 0) {
-        return ['0'];
+        return {negative: false, chunks: ['0']};
       }
-    } else if (typeof n === 'bigint') {
-      if (
-        n < BigInt('-9223372036854775808') ||
-        n > BigInt('9223372036854775807')
-      ) {
+    } else {
+      if (!this.isBigIntInInt64Range(n)) {
         // out of int64 range
-        return [];
+        return undefined;
       }
       if (n === BigInt(0)) {
-        return ['0'];
+        return {negative: false, chunks: ['0']};
       }
     }
 
-    let neg = false;
+    let negative = false;
     if (n < 0) {
-      neg = true;
+      negative = true;
       n = -n;
     }
 
-    const ret: string[] = [];
+    const chunks: string[] = [];
 
     const s = n.toString();
 
@@ -74,7 +91,7 @@ export abstract class NumberToKorean {
         i = 0;
       }
 
-      ret.push(this.trimLeft(s.substring(i, prevPos), '0'));
+      chunks.push(this.trimLeadingZeros(s.substring(i, prevPos)));
 
       if (i === 0) {
         break;
@@ -83,8 +100,35 @@ export abstract class NumberToKorean {
       }
     }
 
-    if (neg) {
-      ret.push('-');
+    return {negative, chunks};
+  }
+
+  private static formatParsedNumber(
+    parsed: ParsedNumber,
+    removeEmptyString: boolean,
+    negativeLabel: string,
+    formatChunk: (chunk: string, unitIndex: number) => string,
+  ): string[] {
+    const ret: string[] = [];
+
+    if (parsed.negative) {
+      ret.push(negativeLabel);
+    }
+
+    for (
+      let unitIndex = parsed.chunks.length - 1;
+      unitIndex >= 0;
+      unitIndex--
+    ) {
+      const chunk = parsed.chunks[unitIndex];
+      if (chunk === '') {
+        if (!removeEmptyString) {
+          ret.push('');
+        }
+        continue;
+      }
+
+      ret.push(formatChunk(chunk, unitIndex));
     }
 
     return ret;
@@ -92,102 +136,76 @@ export abstract class NumberToKorean {
 
   public static toKoreanUnits(
     n: number | bigint,
-    removeEmptyString = false,
+    options: ToKoreanUnitsOptions = {},
   ): string[] {
     if (typeof n !== 'number' && typeof n !== 'bigint') {
       return [];
     }
 
-    let ret = this.parseNumber(n);
-    let dst = 0;
-
-    for (let src = 0; src < ret.length; src++) {
-      if (!removeEmptyString) {
-        dst = src;
-      }
-
-      if (ret[src] !== '') {
-        if (ret[src] !== '-') {
-          ret[dst] = ret[src] + this.unitsBig[src];
-        } else {
-          ret[dst] = '-';
-        }
-        dst += 1;
-      }
+    const parsed = this.parseNumber(n);
+    if (parsed === undefined) {
+      return [];
     }
 
-    if (removeEmptyString) {
-      for (let i = dst; i < ret.length; i++) {
-        ret[i] = '';
-      }
-      ret = ret.slice(0, dst);
-    }
-
-    ret.reverse();
-
-    return ret;
+    return this.formatParsedNumber(
+      parsed,
+      options.removeEmptyString ?? true,
+      '-',
+      (chunk, unitIndex) => chunk + this.unitsBig[unitIndex],
+    );
   }
 
-  private static splitNumberByDigits(s: string): number[] {
-    switch (s.length) {
-      case 4:
-        return [
-          s.charCodeAt(0) - this.ascii0,
-          s.charCodeAt(1) - this.ascii0,
-          s.charCodeAt(2) - this.ascii0,
-          s.charCodeAt(3) - this.ascii0,
-        ];
-      case 3:
-        return [
-          0,
-          s.charCodeAt(0) - this.ascii0,
-          s.charCodeAt(1) - this.ascii0,
-          s.charCodeAt(2) - this.ascii0,
-        ];
-      case 2:
-        return [
-          0,
-          0,
-          s.charCodeAt(0) - this.ascii0,
-          s.charCodeAt(1) - this.ascii0,
-        ];
-      case 1:
-        return [0, 0, 0, s.charCodeAt(0) - this.ascii0];
-      default:
-        return [0, 0, 0, 0];
+  private static digitAt(s: string, pos: number): number {
+    const sourcePos = s.length - 4 + pos;
+    if (sourcePos < 0) {
+      return 0;
     }
+
+    return s.charCodeAt(sourcePos) - this.ascii0;
+  }
+
+  private static readPositionalDigit(n: number, isMonetary: boolean): string {
+    if (isMonetary) {
+      return this.numbersExplicit[n];
+    }
+
+    return this.numbersImplicit[n];
   }
 
   private static readNumber(
     s: string,
-    isSecondPart: boolean,
+    isManUnitChunk: boolean,
     isMonetary: boolean,
   ): string {
-    const nums = this.splitNumberByDigits(s);
+    const thousands = this.digitAt(s, 0);
+    const hundreds = this.digitAt(s, 1);
+    const tens = this.digitAt(s, 2);
+    const ones = this.digitAt(s, 3);
 
     let ret = '';
 
-    for (let i = 0; i < 3; i++) {
-      if (nums[i] > 0) {
-        if (isMonetary) {
-          ret += this.numbersExplicit[nums[i]];
-        } else {
-          ret += this.numbersImplicit[nums[i]];
-        }
-        ret += this.unitsSmall[i];
-      }
+    if (thousands > 0) {
+      ret += this.readPositionalDigit(thousands, isMonetary);
+      ret += this.unitsSmall[0];
+    }
+    if (hundreds > 0) {
+      ret += this.readPositionalDigit(hundreds, isMonetary);
+      ret += this.unitsSmall[1];
+    }
+    if (tens > 0) {
+      ret += this.readPositionalDigit(tens, isMonetary);
+      ret += this.unitsSmall[2];
     }
 
-    if (nums[3] > 0) {
+    if (ones > 0) {
       if (isMonetary) {
-        ret += this.numbersExplicit[nums[3]];
+        ret += this.numbersExplicit[ones];
       } else {
-        if (isSecondPart && nums[0] === 0 && nums[1] === 0 && nums[2] === 0) {
-          // NOTE
-          // special case....
-          ret += this.numbersImplicit[nums[3]];
+        if (isManUnitChunk && thousands === 0 && hundreds === 0 && tens === 0) {
+          // In non-monetary readings, 10001 is read as "만 일", not "일만 일".
+          ret += this.numbersImplicit[ones];
         } else {
-          ret += this.numbersExplicit[nums[3]];
+          ret += this.numbersExplicit[ones];
         }
       }
     }
@@ -197,46 +215,29 @@ export abstract class NumberToKorean {
 
   public static toKoreanLanguage(
     n: number | bigint,
-    isMonetary = false,
-    removeEmptyString = false,
+    options: ToKoreanLanguageOptions = {},
   ): string[] {
     if (typeof n !== 'number' && typeof n !== 'bigint') {
       return [];
     }
 
-    let ret = this.parseNumber(n);
-    let dst = 0;
+    const parsed = this.parseNumber(n);
 
-    if (ret.length === 1 && ret[0] === '0') {
+    if (parsed === undefined) {
+      return [];
+    }
+
+    if (parsed.chunks.length === 1 && parsed.chunks[0] === '0') {
       return [this.zero];
     }
 
-    for (let src = 0; src < ret.length; src++) {
-      if (!removeEmptyString) {
-        dst = src;
-      }
-
-      if (ret[src] !== '') {
-        if (ret[src] !== '-') {
-          let s = this.readNumber(ret[src], src === 1, isMonetary);
-          s = s + this.unitsBig[src];
-          ret[dst] = s;
-        } else {
-          ret[dst] = this.minus;
-        }
-        dst += 1;
-      }
-    }
-
-    if (removeEmptyString) {
-      for (let i = dst; i < ret.length; i++) {
-        ret[i] = '';
-      }
-      ret = ret.slice(0, dst);
-    }
-
-    ret.reverse();
-
-    return ret;
+    return this.formatParsedNumber(
+      parsed,
+      options.removeEmptyString ?? true,
+      this.minus,
+      (chunk, unitIndex) =>
+        this.readNumber(chunk, unitIndex === 1, options.monetary ?? false) +
+        this.unitsBig[unitIndex],
+    );
   }
 }

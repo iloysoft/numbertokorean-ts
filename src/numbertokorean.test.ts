@@ -1,6 +1,6 @@
 import {NumberToKorean} from './numbertokorean';
 
-test('NumberToKorean.toKoreanUnits()', () => {
+describe('NumberToKorean.toKoreanUnits()', () => {
   type inout = {
     value: number | bigint;
     removeEmptyString: boolean;
@@ -176,14 +176,23 @@ test('NumberToKorean.toKoreanUnits()', () => {
     },
   ];
 
-  inputs.forEach(input => {
-    expect(
-      NumberToKorean.toKoreanUnits(input.value, input.removeEmptyString),
-    ).toStrictEqual(input.expected);
+  test.each(inputs)(
+    'value=$value removeEmptyString=$removeEmptyString',
+    input => {
+      expect(
+        NumberToKorean.toKoreanUnits(input.value, {
+          removeEmptyString: input.removeEmptyString,
+        }),
+      ).toStrictEqual(input.expected);
+    },
+  );
+
+  test('removes empty groups by default', () => {
+    expect(NumberToKorean.toKoreanUnits(100000001)).toStrictEqual(['1억', '1']);
   });
 });
 
-test('NumberToKorean.toKoreanLanguage()', () => {
+describe('NumberToKorean.toKoreanLanguage()', () => {
   type inout = {
     value: number | bigint;
     isMonetary: boolean;
@@ -564,13 +573,46 @@ test('NumberToKorean.toKoreanLanguage()', () => {
     },
   ];
 
-  inputs.forEach(input => {
+  test.each(inputs)(
+    'value=$value isMonetary=$isMonetary removeEmptyString=$removeEmptyString',
+    input => {
+      expect(
+        NumberToKorean.toKoreanLanguage(input.value, {
+          monetary: input.isMonetary,
+          removeEmptyString: input.removeEmptyString,
+        }),
+      ).toStrictEqual(input.expected);
+    },
+  );
+
+  test('removes empty groups by default', () => {
+    expect(NumberToKorean.toKoreanLanguage(11000000010000)).toStrictEqual([
+      '십일조',
+      '만',
+    ]);
+  });
+});
+
+describe('NumberToKorean rejects invalid inputs', () => {
+  const inputs: [string, unknown][] = [
+    ['undefined', undefined],
+    ['null', null],
+    ['NaN', NaN],
+    ['Infinity', Infinity],
+    ['-Infinity', -Infinity],
+    ['string', '123'],
+    ['boolean', true],
+    ['object', {}],
+    ['array', []],
+    ['symbol', Symbol('value')],
+  ];
+
+  test.each(inputs)('%s', (_, input) => {
     expect(
-      NumberToKorean.toKoreanLanguage(
-        input.value,
-        input.isMonetary,
-        input.removeEmptyString,
-      ),
-    ).toStrictEqual(input.expected);
+      NumberToKorean.toKoreanUnits(input as number | bigint),
+    ).toStrictEqual([]);
+    expect(
+      NumberToKorean.toKoreanLanguage(input as number | bigint),
+    ).toStrictEqual([]);
   });
 });

@@ -1,27 +1,27 @@
-
 all: build
 
-.PHONY: build
+.PHONY: all build fix lint test smoke-entrypoints coverage clean pack-dry-run
+
 build:
 	npm run build
 
-.PHONY: fix
 fix:
 	npm run fix
 
-.PHONY: lint
 lint:
 	npm run lint
 
-.PHONY: test
 test:
 	npm run test
 
-.PHONY: coverage
+smoke-entrypoints:
+	npm run smoke:entrypoints
+
 coverage:
 	npm run coverage
 
-.PHONY: clean
-clean:
-	rm -f dist/*
+pack-dry-run:
+	npm pack --dry-run --ignore-scripts
 
+clean:
+	npm run clean

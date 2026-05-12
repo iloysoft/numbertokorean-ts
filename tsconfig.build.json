@@ -1,7 +1,17 @@
 {
-    "extends": "./tsconfig.json",
-    "exclude": [
-        "src/**/*.spec.ts",
-        "src/**/*.test.ts"
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "inlineSources": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "types": [],
+    "removeComments": true,
+    "stripInternal": true,
+    "noEmit": false,
+    "noEmitOnError": true
+  },
+  "include": [
+    "src/numbertokorean.ts"
+  ]
 }
