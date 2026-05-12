@@ -12,9 +12,17 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Asia/Seoul"
+    versioning-strategy: "increase-if-necessary"
     open-pull-requests-limit: 5
     allow:
-      - dependency-type: "all"
+      - dependency-type: "direct"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+    ignore:
+      - dependency-name: "@types/node"
+        versions:
+          - ">=23"
     groups:
       npm-minor-patch:
         patterns:
@@ -34,6 +42,11 @@ updates:
       time: "09:30"
       timezone: "Asia/Seoul"
     open-pull-requests-limit: 5
+    allow:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
     groups:
       github-actions-minor-patch:
         patterns:

@@ -5,6 +5,8 @@ representations.
 
 ## Install
 
+Supported Node.js versions: 22.x through 26.x.
+
 Install from GitHub:
 
 ```sh

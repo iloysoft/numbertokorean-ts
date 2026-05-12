@@ -56,7 +56,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^22.19.19",
     "esbuild": "^0.28.0",
     "gts": "^7.0.0",
     "jest": "^30.4.2",
@@ -67,7 +67,7 @@
     "tmp": "0.2.5"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22 <27"
   },
   "packageManager": "npm@11.13.0"
 }
