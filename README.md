@@ -1,7 +1,7 @@
 # numbertokorean-ts
 
 [![CI](https://github.com/iloysoft/numbertokorean-ts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iloysoft/numbertokorean-ts/actions/workflows/ci.yml)
-![Node.js](https://img.shields.io/badge/node-22%20%7C%2023%20%7C%2024%20%7C%2025%20%7C%2026-339933?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?logo=node.js&logoColor=white)
 
 Library to convert `number` and `bigint` values into Sino-Korean `string[]`
 representations.
